@@ -149,8 +149,10 @@ def build(daily_rows, post_rows, content_rows, analysis_rows):
         c["total"] = sum(p["views"] for p in c["perf"].values())
         c["eng"] = sum(p["likes"] + p["comments"] + p["shares"] + p["saves"] for p in c["perf"].values())
         c["channels"] = [k for k in CH_KEYS if k in c["perf"]]
-        if not c["date"]:
-            c["date"] = norm_date(next(iter(c["perf"].values()))["posted_at"])
+        c["dates"] = {k: (norm_date(p["posted_at"]) or c["date"]) for k, p in c["perf"].items()}
+        ds = sorted(d for d in c["dates"].values() if d)
+        if ds:
+            c["date"] = ds[0]
         items.append(c)
 
     # analysis: 연결 이력 별칭 + 삭제 반영
@@ -207,12 +209,13 @@ def analyze(daily, items, tags, texts, q):
     pv = sum(span(k, ps, pe)[0] for k in CH_KEYS); pr = sum(span(k, ps, pe)[1] for k in CH_KEYS)
     total["dv"], total["dr"] = pct(total["views"], pv), pct(total["reactions"], pr)
 
-    qitems = [c for c in items if s <= c["date"] <= e]
+    def in_q(d): return bool(d) and s <= d <= e
+    qitems = [c for c in items if any(in_q(d) for d in c["dates"].values())]
 
     # 채널별 워킹 콘텐츠
     channel_top = {}
     for k in CH_KEYS:
-        lst = [c for c in qitems if k in c["perf"]]
+        lst = [c for c in qitems if k in c["perf"] and in_q(c["dates"].get(k))]
         by_views = sorted(lst, key=lambda c: -c["perf"][k]["views"])[:5]
         by_eng = sorted(lst, key=lambda c: -(c["perf"][k]["likes"] + c["perf"][k]["comments"] + c["perf"][k]["shares"] + c["perf"][k]["saves"]))[:3]
         channel_top[k] = {"count": len(lst), "views": by_views, "eng": by_eng}
@@ -356,7 +359,7 @@ def render(a):
         for i, c in enumerate(ct["views"], 1):
             p = c["perf"][k]; eng = p["likes"] + p["comments"] + p["shares"] + p["saves"]
             cross = f' <span class="tag" style="font-size:10px">교차 {len(c["channels"])}채널</span>' if len(c["channels"]) > 1 else ""
-            H.append(f"<tr><td class='muted'>{i}</td><td>{link(c, k)}{cross}</td><td class='n muted'>{c['date']}</td><td class='n'><b>{fmt(p['views'])}</b></td><td class='n'>{fmt(eng)}</td></tr>")
+            H.append(f"<tr><td class='muted'>{i}</td><td>{link(c, k)}{cross}</td><td class='n muted'>{c['dates'].get(k) or c['date']}</td><td class='n'><b>{fmt(p['views'])}</b></td><td class='n'>{fmt(eng)}</td></tr>")
         H.append("</table>")
         if ct["eng"]:
             H.append("<div style='font-size:12px;color:#6B7280;margin-top:10px'>참여 수 기준 TOP 3: " + " · ".join(f"{link(c, k)} ({fmt(c['perf'][k]['likes']+c['perf'][k]['comments']+c['perf'][k]['shares']+c['perf'][k]['saves'])})" for c in ct["eng"]) + "</div>")
