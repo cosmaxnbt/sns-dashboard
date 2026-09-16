@@ -327,7 +327,7 @@ def render(a):
     q, s, e = a["q"], a["start"], a["end"]
     t = a["total"]
     H = [f"""<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SNS 분기 리포트 {q}</title>
+<title>SNS 분기 리포트 {q}</title>\n<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>{CSS}</style></head><body><div class="wrap">
 <div class="hero"><div class="k">COSMAX NBT · SOCIAL PERFORMANCE REPORT</div><h1>{q} SNS 분기 리포트</h1>
@@ -464,7 +464,7 @@ def main():
     entries = json.load(open(idx_path, encoding="utf-8")) if os.path.exists(idx_path) else []
     entries = [e for e in entries if e.get("quarter") != q]
     entries.append({"quarter": q, "title": f"{q} SNS 분기 리포트", "file": fname,
-                    "range": f"{a['start']} ~ {a['end']}", "generated_at": NOW.strftime("%Y-%m-%d")})
+                    "range": f"{a['start']} ~ {a['end']}", "generated_at": NOW.strftime("%Y-%m-%d %H:%M")})
     entries.sort(key=lambda e: e["quarter"], reverse=True)
     json.dump(entries, open(idx_path, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     open(os.path.join(args.out, "index.html"), "w", encoding="utf-8").write(render_index(entries))
