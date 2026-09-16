@@ -355,7 +355,8 @@ def render(a):
         H.append("<table><tr><th>#</th><th>조회수 TOP 5</th><th class='n'>게시일</th><th class='n'>조회수</th><th class='n'>참여</th></tr>")
         for i, c in enumerate(ct["views"], 1):
             p = c["perf"][k]; eng = p["likes"] + p["comments"] + p["shares"] + p["saves"]
-            H.append(f"<tr><td class='muted'>{i}</td><td>{link(c, k)}{' <span class=\"tag\" style=\"font-size:10px\">교차 ' + str(len(c['channels'])) + '채널</span>' if len(c['channels']) > 1 else ''}</td><td class='n muted'>{c['date']}</td><td class='n'><b>{fmt(p['views'])}</b></td><td class='n'>{fmt(eng)}</td></tr>")
+            cross = f' <span class="tag" style="font-size:10px">교차 {len(c["channels"])}채널</span>' if len(c["channels"]) > 1 else ""
+            H.append(f"<tr><td class='muted'>{i}</td><td>{link(c, k)}{cross}</td><td class='n muted'>{c['date']}</td><td class='n'><b>{fmt(p['views'])}</b></td><td class='n'>{fmt(eng)}</td></tr>")
         H.append("</table>")
         if ct["eng"]:
             H.append("<div style='font-size:12px;color:#6B7280;margin-top:10px'>참여 수 기준 TOP 3: " + " · ".join(f"{link(c, k)} ({fmt(c['perf'][k]['likes']+c['perf'][k]['comments']+c['perf'][k]['shares']+c['perf'][k]['saves'])})" for c in ct["eng"]) + "</div>")
