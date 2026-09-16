@@ -1,0 +1,38 @@
+name: 분기 SNS 리포트
+
+on:
+  schedule:
+    - cron: "0 0 1 1,4,7,10 *"   # 분기 첫날 09:00 KST — 직전 분기 리포트 자동 생성
+  workflow_dispatch:
+    inputs:
+      quarter:
+        description: "생성할 분기 (예: 2026-Q3). 비우면 직전 분기"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - name: Generate report
+        run: |
+          if [ -n "${{ github.event.inputs.quarter }}" ]; then
+            python report.py --quarter "${{ github.event.inputs.quarter }}"
+          else
+            python report.py
+          fi
+      - name: Commit & push
+        run: |
+          git config user.name "sns-report-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add reports/
+          git diff --cached --quiet || git commit -m "분기 리포트 자동 생성"
+          git push
